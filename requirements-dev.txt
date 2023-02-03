@@ -1,4 +1,4 @@
-black==21.8b0
+black==22.3.0
 flake8==4.0.1
 flake8-docstrings==1.6
 flake8-use-fstring==1.4
