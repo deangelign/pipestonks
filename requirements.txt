@@ -1,0 +1,6 @@
+firebase-admin==6.1.0
+investpy==1.0.8
+yfinance==0.2.10
+tqdm==4.64.1
+pyarrow==11.0.0
+fastparquet==2023.2.0

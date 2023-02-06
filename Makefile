@@ -1,7 +1,7 @@
 about:
 	@echo "PipeStonks project"
 
-SRC_DIRS := # placeholder  
+SRC_DIRS := src/  
 
 .PHONY: format
 format:
