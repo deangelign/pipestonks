@@ -1,0 +1,23 @@
+[flake8]
+ignore = D203 # Ignore 1 blank line required before class docstring
+exclude =
+    .git,
+    __pycache__,
+max-complexity = 10
+max-line-length = 100
+
+per-file-ignores =
+    *.py: F401
+    __init__.py: D104
+    test_*: D100, D101, D102, F401
+
+#flake8-use-fstring
+#Level 0 (default): only report error if the value before % or .format is a string literal.
+#Level 1: report error if a string literal appears before % or .format anywhere in the statement.
+#Level 2: report any usage of % or .format
+
+percent-greedy=2
+format-greedy=2
+
+#flake8-docstrings
+docstring-convention=google
