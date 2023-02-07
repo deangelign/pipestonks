@@ -1,9 +1,9 @@
 # This is a basic workflow to help you get started with Actions
 
-name: Code Convetions
+name: Raw Data
 
 # Controls when the workflow will run
-on: [push, workflow_dispatch]
+on: [workflow_dispatch]
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -22,8 +22,12 @@ jobs:
       - name: Installing requirements
         run: pip install -r requirements-dev.txt
       # Runs a single command using the runners shell
-      - name: flake8
-        run: python3 -m flake8 $GITHUB_WORKSPACE
-      - name: black
-        run: python3 -m black $GITHUB_WORKSPACE
+      - name: test
+        env:
+        private_key_id: ${{ private_key_id }}
+        private_key: ${{ private_key }}
+        client_email: ${{ client_email }}
+        client_id: ${{ client_id }}
+        client_x509_cert_url: ${{ client_x509_cert_url }}
+        run: python3 sandbox.py $private_key_id $private_key $client_email $client_id $client_x509_cert_url
 
