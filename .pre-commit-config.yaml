@@ -17,4 +17,3 @@ repos:
     hooks:
     -   id: mypy
         exclude: ^legacy/
-        
