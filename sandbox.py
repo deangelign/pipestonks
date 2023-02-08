@@ -43,6 +43,3 @@ blob.download_to_filename(new_local_file_path)
 with open(new_local_file_path, "r") as file:
     str_file = file.readlines()
     print(str_file)
-
-# blob.upload_from_filename(file_path)
-# print(bucket.list_blobs())
