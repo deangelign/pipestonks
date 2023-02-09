@@ -22,13 +22,6 @@ config_dict = {
     "client_x509_cert_url": os.environ["client_x509_cert_url"],
 }
 
-print(config_dict)
-
-print(f"Test")
-print(config_dict["private_key"])
-print(os.environ["private_key"])
-print(config_dict["private_key"] == os.environ["private_key"])
-
 cred = credentials.Certificate(config_dict)
 # default_app = firebase_admin.initialize_app(cred)
 firebase_admin.initialize_app(
