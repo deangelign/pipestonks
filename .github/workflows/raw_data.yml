@@ -19,9 +19,6 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: "3.8"
-      - uses: actions/cache@v2
-        with:
-          path: ~/.raw-data
       - name: Installing requirements
         run: pip install -r requirements.txt
       # Runs a single command using the runners shell
@@ -32,6 +29,6 @@ jobs:
           client_email: ${{ secrets.CLIENT_EMAIL }}
           client_id: ${{ secrets.CLIENT_ID }}
           client_x509_cert_url: ${{ secrets.CLIENT_X509_CERT_URL }}
-          temp_path: ~/.raw-data
-#          temp_path: ${{ runner.temp }}
-        run: python3 sandbox.py
+          temp_path: ${{ runner.temp }}
+        run: |
+          python3 sandbox.py
