@@ -19,6 +19,7 @@ config_dict = {
 }
 
 config_file = sys.argv[6] + "config.json"
+print(config_file)
 with (config_file, "w") as file:
     json.dump(config_dict, file)
 
