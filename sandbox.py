@@ -1,6 +1,7 @@
 # flake8: noqa
 # type: ignore
 
+from firebase_admin
 from firebase_admin import credentials, storage
 
 import json
