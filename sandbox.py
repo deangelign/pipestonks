@@ -1,10 +1,8 @@
 # flake8: noqa
 # type: ignore
 
-import firebase_admin
 from firebase_admin import credentials, storage
 
-import sys
 import json
 import os
 
