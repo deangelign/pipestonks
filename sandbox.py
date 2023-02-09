@@ -24,7 +24,7 @@ print(config_dict)
 
 config_file = "config.json"
 print(config_file)
-with (config_file, "w") as infile:
+with open(config_file, "w") as infile:
     json.dump(config_dict, infile)
 
 
