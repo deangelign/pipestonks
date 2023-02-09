@@ -19,7 +19,7 @@ config_dict = {
     "client_x509_cert_url": sys.argv[5],
 }
 
-config_file = sys.argv[6] + "config.json"
+config_file = sys.argv[6] + "/config.json"
 print(config_file)
 with (config_file, "w") as file:
     json.dump(config_dict, file)
