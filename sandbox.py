@@ -21,15 +21,10 @@ config_dict = {
     "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
     "client_x509_cert_url": os.environ["client_x509_cert_url"],
 }
+
 print(config_dict)
 
-config_file = "config.json"
-print(config_file)
-with open(config_file, "w") as infile:
-    json.dump(config_dict, infile)
-
-
-cred = credentials.Certificate(config_file)
+cred = credentials.Certificate(config_dict)
 # default_app = firebase_admin.initialize_app(cred)
 firebase_admin.initialize_app(
     cred, {"storageBucket": "pipestonks.appspot.com"}
