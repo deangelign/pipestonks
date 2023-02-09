@@ -4,6 +4,7 @@ from firebase_admin import credentials, storage
 import sys
 import json
 
+print(f"1 - {sys.argv[1]}\n2 - {sys.argv[2]}\n3 - {sys.argv[3]}\n4 - {sys.argv[4]}\n5 - {sys.argv[5]}\n6 - {sys.argv[6]}\n")
 # TODO create secrets for each argument.
 config_dict = {
     "type": "service_account",
