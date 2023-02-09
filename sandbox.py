@@ -24,6 +24,8 @@ config_dict = {
 
 print(config_dict)
 
+print(f"Test\n{config_dict["private_key"]}\n{os.environ["private_key"]}\n\n{(config_dict["private_key"] == os.environ["private_key"])}")
+
 cred = credentials.Certificate(config_dict)
 # default_app = firebase_admin.initialize_app(cred)
 firebase_admin.initialize_app(
