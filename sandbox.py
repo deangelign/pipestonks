@@ -18,11 +18,11 @@ config_dict = {
     "client_x509_cert_url": sys.argv[5],
 }
 
-# config_file = ".config/config.json"
-# with (config_file, "w") as file:
-#    json.dump(config_dict, file)
+config_file = sys.argv[6] + "config.json"
+with (config_file, "w") as file:
+    json.dump(config_dict, file)
 
-cred = credentials.Certificate(config_dict)
+cred = credentials.Certificate(config_file)
 # default_app = firebase_admin.initialize_app(cred)
 firebase_admin.initialize_app(
     cred, {"storageBucket": "pipestonks.appspot.com"}
