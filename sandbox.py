@@ -6,25 +6,24 @@ from firebase_admin import credentials, storage
 
 import sys
 import json
+import os
 
-print(f"1 - {sys.argv[1]}\n2 - {sys.argv[2]}\n3 - {sys.argv[3]}\n4 - {sys.argv[4]}\n")
-print(f"5 - {sys.argv[5]}\n6 - {sys.argv[6]}\n")
 
 # TODO create secrets for each argument.
 config_dict = {
     "type": "service_account",
     "project_id": "pipestonks",
-    "private_key_id": sys.argv[1],
-    "private_key": sys.argv[2],
-    "client_email": sys.argv[3],
-    "client_id": sys.argv[4],
+    "private_key_id": os.environ["private_key_id"],
+    "private_key": os.environ["private_key"],
+    "client_email": os.environ["client_email"],
+    "client_id": os.environ["client_id"],
     "auth_uri": "https://accounts.google.com/o/oauth2/auth",
     "token_uri": "https://oauth2.googleapis.com/token",
     "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-    "client_x509_cert_url": sys.argv[5],
+    "client_x509_cert_url": os.environ["client_x509_cert_url"],
 }
 
-config_file = sys.argv[6] + "/config.json"
+config_file = os.environ["temp_path"] + "/config.json"
 print(config_file)
 with (config_file, "w") as file:
     json.dump(config_dict, file)
