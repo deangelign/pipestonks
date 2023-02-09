@@ -23,6 +23,8 @@ config_dict = {
     "client_x509_cert_url": os.environ["client_x509_cert_url"],
 }
 
+print(config_dict)
+
 config_file = os.environ["temp_path"] + "/config.json"
 print(config_file)
 with (config_file, "w") as file:
