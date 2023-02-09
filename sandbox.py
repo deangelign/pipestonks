@@ -13,7 +13,7 @@ config_dict = {
     "type": "service_account",
     "project_id": "pipestonks",
     "private_key_id": os.environ["private_key_id"],
-    "private_key": .environ["private_key"],
+    "private_key": os.environ["private_key"],
     "client_email": os.environ["client_email"],
     "client_id": os.environ["client_id"],
     "auth_uri": "https://accounts.google.com/o/oauth2/auth",
