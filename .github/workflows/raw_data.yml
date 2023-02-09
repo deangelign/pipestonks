@@ -24,10 +24,10 @@ jobs:
       # Runs a single command using the runners shell
       - name: test
         env:
-          PRIVATE_KEY_ID: ${{ PRIVATE_KEY_ID }}
+          private_key_id: ${{ PRIVATE_KEY_ID }}
           PRIVATE_KEY: ${{ PRIVATE_KEY }}
           CLIENT_EMAIL: ${{ CLIENT_EMAIL }}
           CLIENT_ID: ${{ CLIENT_ID }}
           CLIENT_X509_CERT_URL: ${{ CLIENT_X509_CERT_URL }}
-        run: python3 sandbox.py $PRIVATE_KEY_ID $PRIVATE_KEY $CLIENT_EMAIL $CLIENT_ID $CLIENT_X509_CERT_URL
+        run: python3 sandbox.py $private_key_id $PRIVATE_KEY $CLIENT_EMAIL $CLIENT_ID $CLIENT_X509_CERT_URL
 
