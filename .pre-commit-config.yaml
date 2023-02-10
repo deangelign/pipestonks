@@ -5,15 +5,11 @@ repos:
     rev: 22.3.0
     hooks:
     -   id: black
-        language_version: python3.10
-        exclude: ^legacy/
--   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v1.2.3
+-   repo: https://github.com/pycqa/flake8
+    rev: 4.0.1
     hooks:
     -   id: flake8
-        exclude: ^legacy/
 -   repo: https://github.com/pre-commit/mirrors-mypy
     rev: 'v0.931'  # Use the sha / tag you want to point at
     hooks:
     -   id: mypy
-        exclude: ^legacy/
