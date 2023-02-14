@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+"""Utility functions for the project."""
 
 import io
 import os  # noqa

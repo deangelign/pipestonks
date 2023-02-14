@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+"""Download the data from the Firebase storage bucket."""
 
 import json
 from typing import List, Dict
