@@ -1,20 +1,20 @@
 # This is a basic workflow to help you get started with Actions
 
-name: Publish_data
+name: Pipestonks
 
 # Controls when the workflow will run
 on:
   # Triggers at 22:00 UTC (or 19:00 in SP time zone) monday through friday
   schedule:
     - cron: '0 22 * * 1-5'
-    
+
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   # This workflow contains a single job called "build"
-  run_publish_data_script:
+  publish_data:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
 
@@ -25,11 +25,10 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: "3.8"
-          ref: dev # Checkout to dev branch
       # Install the requirements
       - name: Installing requirements
         run: pip install -r requirements.txt
-      
+
       # Runs a single command using the runners shell
       - name: publish_stocks
         # Create some env variables. Read the values from github secrets
@@ -47,3 +46,35 @@ jobs:
           temp_path: ${{ runner.temp }}
         run: |
           python3 src/raw_data/stocks.py
+
+  filter_stocks:
+    needs: publish_data
+    runs-on: ubuntu-latest
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.8"
+      # Install the requirements
+      - name: Installing requirements
+        run: pip install -r requirements.txt
+
+      # Runs a single command using the runners shell
+      - name: filter_stocks
+        # Create some env variables. Read the values from github secrets
+        env:
+          PUBLISHER_TYPE: ${{ secrets.PUBLISHER_TYPE }}
+          PUBLISHER_PROJECT_ID: ${{ secrets.PUBLISHER_PROJECT_ID }}
+          PUBLISHER_PRIVATE_KEY_ID: ${{ secrets.PUBLISHER_PRIVATE_KEY_ID }}
+          PUBLISHER_PRIVATE_KEY: ${{ secrets.PUBLISHER_PRIVATE_KEY }}
+          PUBLISHER_CLIENT_EMAIL: ${{ secrets.PUBLISHER_CLIENT_EMAIL }}
+          PUBLISHER_CLIENT_ID: ${{ secrets.PUBLISHER_CLIENT_ID }}
+          PUBLISHER_AUTH_URI: ${{ secrets.PUBLISHER_AUTH_URI }}
+          PUBLISHER_TOKEN_URI: ${{ secrets.PUBLISHER_TOKEN_URI }}
+          PUBLISHER_AUTH_PROVIDER_X509_CERT_URL: ${{ secrets.PUBLISHER_AUTH_PROVIDER_X509_CERT_URL }}
+          PUBLISHER_CLIENT_X509_CERT_URL: ${{ secrets.PUBLISHER_CLIENT_X509_CERT_URL }}
+          temp_path: ${{ runner.temp }}
+        run: |
+          python3 src/download_data/stocks.py
