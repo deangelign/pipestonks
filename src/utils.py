@@ -86,6 +86,7 @@ def convert_parquet_bytes_2_dataframe(parquet_bytes: bytes):
 
 def load_dataframe_from_filename(
     firebase_filename: str,
+    bucket: storage.bucket.Bucket,
 ) -> Tuple[pd.DataFrame, google.cloud.storage.blob.Blob]:
     """Load a pandas DataFrame from the given Firebase filename.
 
