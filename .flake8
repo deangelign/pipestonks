@@ -1,7 +1,7 @@
 [flake8]
 # D100: Missing docstring in public module
 # D203: Ignore 1 blank line required before class docstring
-ignore = D100, D203  
+ignore = D100, D203, W503  
 exclude =
     .git,
     __pycache__,

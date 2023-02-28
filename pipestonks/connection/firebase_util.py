@@ -124,6 +124,23 @@ def save_dataframe(df: pd.DataFrame, blob: google.cloud.storage.blob.Blob) -> No
         df: The dataframe to be saved.
         blob: The Google Cloud Storage blob.
     """
-    buffer = io.BytesIO()
-    df.to_parquet(buffer, engine="auto", compression="gzip")
-    blob.upload_from_string(buffer.getvalue())
+    if get_env_type() == "prod":
+        buffer = io.BytesIO()
+        df.to_parquet(buffer, engine="auto", compression="gzip")
+        blob.upload_from_string(buffer.getvalue())
+    elif get_env_type() == "dev":
+        pass
+    else:
+        raise ValueError(f"Unknown env_type {get_env_type()}")
+
+
+def get_env_type() -> str:
+    """Returns the value of the "PIPESTONKS_ENV_TYPE" environment variable.
+
+    Returns:
+        A string containing the value of the "PIPESTONKS_ENV_TYPE" environment variable.
+
+    Raises:
+        KeyError: If the "PIPESTONKS_ENV_TYPE" environment variable is not set.
+    """
+    return os.environ["PIPESTONKS_ENV_TYPE"]
