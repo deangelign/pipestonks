@@ -144,3 +144,12 @@ def get_env_type() -> str:
         KeyError: If the "PIPESTONKS_ENV_TYPE" environment variable is not set.
     """
     return os.environ["PIPESTONKS_ENV_TYPE"]
+
+
+def get_temporary_folder() -> str:
+    """Returns the temporary folder path.
+
+    Returns:
+        A string representing the path of the temporary folder.
+    """
+    return os.environ["temp_path"]

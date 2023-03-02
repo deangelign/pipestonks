@@ -84,7 +84,7 @@ if __name__ == "__main__":
         if not stock_df.empty:
             save_dataframe(stock_df, blob)
 
-    extra_info = {"last_update": datetime.now().strftime("%Y-%m%d %H:%M:%S")}
+    extra_info = {"last_update": datetime.now().strftime("%Y_%m_%d %H:%M:%S")}
     filename = os.path.join(root_folder, "info.json")
     serialized_dictionary = json.dumps(extra_info)
     blob = storage.bucket().blob(filename)

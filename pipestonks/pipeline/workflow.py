@@ -1,22 +1,26 @@
 import os
 import pandas as pd  # type: ignore
+import joblib  # type: ignore
 
-from typing import List, Iterable, Dict, Tuple
+from typing import List, Iterable, Dict, Tuple, Any
+import json
 from pipestonks.connection.firebase_util import (
     get_storage_file_format,
     get_secrets,
     init_firebase_connection,
     get_blob,
     load_dataframe_from_blob,
-    save_dataframe,
+    get_temporary_folder,
 )
 
+from datetime import datetime, timedelta
 from firebase_admin import storage  # type: ignore
 from sklearn.model_selection import train_test_split  # type: ignore
 from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor  # type: ignore
 from sklearn.neighbors import KNeighborsRegressor  # type: ignore
 from sklearn.neural_network import MLPRegressor  # type: ignore
 from sklearn.model_selection import GridSearchCV
+from sklearn.feature_selection import SelectKBest, f_regression  # type: ignore
 from sklearn.metrics import mean_absolute_error  # type: ignore
 from tqdm import tqdm  # type: ignore
 
@@ -170,11 +174,27 @@ def apply_lags(df: pd.DataFrame, lags: List[int] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 1
         shifted.columns = [f"{column}_shifted_by_{shift}" for column in shifted.columns]
         newdata = pd.concat((newdata, shifted), axis=1)
 
-    forward_lag = 5
-    newdata["target"] = newdata["Close"].shift(-forward_lag)
-    newdata = newdata.drop("Close", axis=1)
-    newdata = newdata.dropna()
     return newdata
+
+
+def create_train_dataset(df: pd.DataFrame, forward_lag: int = 1, prediction_column: str = "target"):
+    """Create a train dataset with lagged values of a given column as features.
+
+    Args:
+        df (pandas.DataFrame): The original dataset.
+
+        forward_lag (int, optional): The number of periods to shift the target column forward.
+            Defaults to 1.
+
+        prediction_column (str, optional): The name of the target column. Defaults to "target".
+
+    Returns:
+        pandas.DataFrame: The train dataset with the target column shifted and NaN rows removed.
+    """
+    df[prediction_column] = df["Close"].shift(-forward_lag)
+    df = df.dropna()
+
+    return df
 
 
 def extract_features(df):
@@ -190,8 +210,27 @@ def extract_features(df):
     df = compute_sma(df)
     df = compute_Bollinger_bands(df)
     df = compute_Donchian_channels(df)
+    df = apply_lags(df)
+    df = df.dropna(axis=1, how="all")
 
-    return apply_lags(df)
+    return df
+
+
+def feature_selection(X: pd.DataFrame, y: pd.DataFrame, n_features: int) -> pd.DataFrame:
+    """Performs feature selection on the input data.
+
+    Args:
+        X: A pandas DataFrame with the features to be selected.
+        y: Prediction column.
+        n_features: An integer representing the number of features to be selected.
+
+    Returns:
+        A pandas DataFrame with the n_features most representative.
+    """
+    selector = SelectKBest(f_regression, k=n_features)
+    selector.fit(X, y)
+    selected_features = selector.get_support(indices=True)
+    return selected_features
 
 
 def evaluate_models(X_train, y_train, X_test, y_test):
@@ -235,16 +274,16 @@ def evaluate_models(X_train, y_train, X_test, y_test):
     """
     models = {
         "Random Forest": RandomForestRegressor(),
-        "Gradient Boosting": GradientBoostingRegressor(),
+        # "Gradient Boosting": GradientBoostingRegressor(),
         "KNN": KNeighborsRegressor(),
-        "Neural Network": MLPRegressor(),
+        # "Neural Network": MLPRegressor(),
     }
 
     params = {
         "Random Forest": {"n_estimators": [10, 50, 100]},
-        "Gradient Boosting": {"n_estimators": [10, 50, 100], "learning_rate": [0.1, 0.5, 1.0]},
+        # "Gradient Boosting": {"n_estimators": [10, 50, 100], "learning_rate": [0.1, 0.5, 1.0]},
         "KNN": {"n_neighbors": [3, 5, 7]},
-        "Neural Network": {"hidden_layer_sizes": [(50,), (100,), (50, 50)]},
+        # "Neural Network": {"hidden_layer_sizes": [(50,), (100,), (50, 50)]},
     }
 
     best_model = None
@@ -265,11 +304,54 @@ def evaluate_models(X_train, y_train, X_test, y_test):
     }
 
 
+def get_data_2_infer(features: pd.DataFrame, selected_feats_name: List[str]):
+    """Extracts the selected features of the most recent row.
+
+    Args:
+        features (pd.DataFrame): Input features DataFrame.
+        selected_feats_name (List[str]): List with the names of the selected features.
+
+    Returns:
+        pd.DataFrame: DataFrame with the most recent row and the selected features for inference.
+    """
+    data_infer = df_feats.tail(1)[selected_feats_name]
+    return data_infer
+
+
+def generate_future_dates(df: pd.DataFrame, periods: int) -> pd.Series:
+    """This function takes a DataFrame with a DatetimeIndex and discovers its frequency.
+
+    It then generates future dates based on the discovered frequency and the number of
+    periods specified.
+
+    Args:
+        df (pd.DataFrame): A DataFrame with a DatetimeIndex
+        periods (int): The number of future periods to generate
+
+    Returns:
+        pd.Series: A pandas Series with the future dates
+    """
+    # Get the index of the DataFrame and convert it to a pandas DatetimeIndex
+    idx = pd.DatetimeIndex(df.index)
+
+    # Compute the difference between consecutive dates in the index and find the mode
+    freq = pd.Series(idx[1:] - idx[:-1]).mode()[0]
+
+    # Generate future dates based on the discovered frequency and the number of periods specified
+    future_dates = pd.date_range(start=idx[-1] + freq, periods=periods, freq=freq)
+
+    return future_dates
+
+
 if __name__ == "__main__":
     init_firebase_connection(get_secrets())
 
     root_folder = ""
     data_folder = os.path.join(root_folder, "br_stock_exchange/")
+    models_folder = os.path.join(root_folder, "ML_models/")
+    reports_folder = os.path.join(root_folder, "reports/")
+    temp_folder = get_temporary_folder()
+
     output_file_format = get_storage_file_format()
     bucket = storage.bucket()  # storage bucket
 
@@ -277,19 +359,77 @@ if __name__ == "__main__":
     stocks_to_filter = get_target_stocks()
 
     filtred_info = get_filtered_data(list_objects, stocks_to_filter)
-    summary_best_models = {}
+    summary = {}
     for key, value in tqdm(filtred_info.items()):
+        print(key)
         df_all_data = value[1]
         df = df_all_data
 
         df_feats = extract_features(df)
+        df_dataset = create_train_dataset(df_feats, forward_lag=1)  # predict tomorrow
 
-        X = df_feats.drop("target", axis=1)
-        Y = df_feats["target"]
-        X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.2, random_state=42)
+        X = df_dataset.drop("target", axis=1)
+        y = df_dataset["target"]
 
-        # Avalia os modelos e seleciona o melhor
+        selected_feats_indices = feature_selection(X, y, 50)
+        selected_feats_name = X.columns[selected_feats_indices]
+
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+        X_train = X_train[selected_feats_name]
+        X_test = X_test[selected_feats_name]
+
+        # Evalute models and pick the best one
         res_summary = evaluate_models(X_train, y_train, X_test, y_test)
-        summary_best_models[key] = res_summary
 
-    print(filtred_info)
+        # forecast
+        input_data = get_data_2_infer(df_feats, selected_feats_name)
+        future_dates_pred = generate_future_dates(df_feats, 1)
+        prediction = res_summary["model"].predict(input_data)
+        diff = prediction - input_data["Close"]
+
+        # creating report
+        res_summary["predction"] = {}
+        res_summary["predction"]["date"] = list(future_dates_pred)
+        res_summary["predction"]["value"] = list(prediction)
+        res_summary["predction"]["diff"] = list(diff)
+
+        # store the results localy
+        summary[key] = res_summary
+
+    print("Update models")
+    for key in tqdm(summary.keys()):
+        temp_file = os.path.join(temp_folder, f"{key}.joblib")
+        filename_model_cloud = os.path.join(models_folder, key, f"{key}.joblib")
+        filename_info_cloud = os.path.join(models_folder, key, "model_info.json")
+
+        joblib.dump(summary[key]["model"], temp_file)
+
+        with open(temp_file, "rb") as f:
+            model_bytes = f.read()
+
+        blob = bucket.blob(filename_model_cloud)
+        blob.upload_from_string(model_bytes, content_type="application/octet-stream")
+
+        extra_info = {
+            "training_date": datetime.now().strftime("%Y_%m_%d %H:%M:%S"),
+            "model_type": str(summary[key]["model"]),
+            "MAE": summary[key]["MAE"],
+        }
+        serialized_dictionary = json.dumps(extra_info)
+        blob = storage.bucket().blob(filename_info_cloud)
+        blob.upload_from_string(serialized_dictionary, content_type="application/json")
+
+    print("Creating report")
+    report: Dict[str, Any] = {}
+    for key in tqdm(summary.keys()):
+        report[key] = {}
+        report[key]["prediciton"] = str(summary[key]["predction"])
+
+        summary[key]["predction"]
+    report[key]["published_date"] = str(datetime.now().strftime("%Y_%m_%d %H:%M:%S"))
+
+    today_date = str(datetime.now().strftime("%Y_%m_%d"))
+    filename_report = os.path.join(reports_folder, f"report_{today_date}.json")
+    serialized_dictionary = json.dumps(report)
+    blob = storage.bucket().blob(filename_report)
+    blob.upload_from_string(serialized_dictionary, content_type="application/json")
