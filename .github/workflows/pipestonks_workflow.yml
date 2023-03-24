@@ -1,6 +1,6 @@
 # This is a basic workflow to help you get started with Actions
 
-name: Publish_data
+name: Pipestonks
 
 # Controls when the workflow will run
 on:
@@ -26,12 +26,16 @@ jobs:
         with:
           python-version: "3.8"
           ref: dev # Checkout to dev branch
-      # Install the requirements
+      # Install requirements
       - name: Installing requirements
-        run: pip install -r requirements.txt
+        run: pip3 install -r requirements.txt
+
+      # Install Pipestonks
+      - name: Installing Pipestonks
+        run: python3 setup.py install
       
       # Runs a single command using the runners shell
-      - name: publish_stocks
+      - name: publish_data
         # Create some env variables. Read the values from github secrets
         env:
           PUBLISHER_TYPE: ${{ secrets.PUBLISHER_TYPE }}
@@ -46,4 +50,4 @@ jobs:
           PUBLISHER_CLIENT_X509_CERT_URL: ${{ secrets.PUBLISHER_CLIENT_X509_CERT_URL }}
           temp_path: ${{ runner.temp }}
         run: |
-          python3 src/raw_data/stocks.py
+          python3 scripts/publish_raw_data.py
