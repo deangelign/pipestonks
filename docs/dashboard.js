@@ -15,7 +15,7 @@ async function startApplication() {
   self.pyodide.globals.set("sendPatch", sendPatch);
   console.log("Loaded!");
   await self.pyodide.loadPackage("micropip");
-  const env_spec = ['https://cdn.holoviz.org/panel/0.14.4/dist/wheels/bokeh-2.4.3-py3-none-any.whl', 'https://cdn.holoviz.org/panel/0.14.4/dist/wheels/panel-0.14.4-py3-none-any.whl', 'pyodide-http==0.1.0', 'google', 'os', 'pandas', 'param', 'pipestonks', 'plotly']
+  const env_spec = ['https://cdn.holoviz.org/panel/0.14.4/dist/wheels/bokeh-2.4.3-py3-none-any.whl', 'https://cdn.holoviz.org/panel/0.14.4/dist/wheels/panel-0.14.4-py3-none-any.whl', 'pyodide-http==0.1.0', 'google', 'io', 'os', 'pandas', 'param', 'plotly', 'typing']
   for (const pkg of env_spec) {
     let pkg_name;
     if (pkg.endsWith('.whl')) {
@@ -50,33 +50,103 @@ init_doc()
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[2]:
+# In[22]:
 
 
 import panel as pn
 import pandas as pd
 import plotly.graph_objects as go
+import os
+from typing import Iterable, List, Tuple, Dict
+import io
 
 pn.extension('plotly', template='fast')
 
 
-# In[1]:
+# In[23]:
 
 
-import os, sys
-parent_dir = os.path.abspath('../..')
-# the parent_dir could already be there if the kernel was not restarted,
-# and we run this cell again
-if parent_dir not in sys.path:
-    sys.path.append(parent_dir)
+def load_dataframe_from_blob(blob) -> pd.DataFrame:
+    """Load a dataframe from a Google Cloud Storage blob.
 
-from pipestonks.connection.firebase_util import (load_dataframe_from_filename, get_temporary_folder, get_storage_file_format)
+    Args:
+        blob: The Google Cloud Storage blob.
 
-from pipestonks.pipeline.workflow import (get_target_stocks, get_filtered_data)
+    Returns:
+        The loaded dataframe.
+    """
+    existing_content = blob.download_as_bytes()
+    existing_df = convert_parquet_bytes_2_dataframe(existing_content)
+    return existing_df
+
+def convert_parquet_bytes_2_dataframe(parquet_bytes: bytes):
+    """Convert the given parquet bytes into a pandas DataFrame.
+
+    Args:
+        parquet_bytes: The parquet bytes to be converted.
+
+    Returns:
+        A pandas DataFrame created from the given parquet bytes.
+    """
+    pq_file = io.BytesIO(parquet_bytes)
+    df = pd.read_parquet(pq_file)
+    return df
+
+def get_temporary_folder() -> str:
+    """Returns the temporary folder path.
+
+    Returns:
+        A string representing the path of the temporary folder.
+    """
+    return os.environ["temp_path"]
+
+def get_storage_file_format():
+    """Returns the default format used to store the pandas.dataframe.
+
+    Returns:
+        The default format used to store the pandas.dataframe.
+    """
+    return ".parquet.gzip"
+
+def get_target_stocks():
+    """Returns a list of target stock symbols for filtering data.
+
+    Returns:
+    List of strings representing the target stock symbols.
+    """
+    # read_json_to_list(".config/config.json")
+    return ["PETR4", "CPLE6", "ITSA4"]
+
+def get_filtered_data(
+    list_objects: Iterable, target_stocks_list: List[str]
+) -> Dict[str, Tuple[str, pd.DataFrame]]:
+    """Filters data from a list of objects based on the target stocks.
+
+    Args:
+    - list_objects (Iterable): An iterable object containing data to be filtered.
+    - target_stocks_list (List[str]): A list of target stock symbols.
+
+    Returns:
+    A dictionary containing the filtered data for each target stock symbol.
+    The dictionary keys represent the target stock symbol and the values are a tuple
+    containing the object name and the filtered DataFrame.
+    """
+    filtred_info = {}
+    for obj in list_objects:
+        if obj.name.endswith("/"):
+            continue
+
+        for stock_symbol in target_stocks_list:
+            if stock_symbol in obj.name:
+                df = load_dataframe_from_blob(obj)
+                filtred_info[stock_symbol] = (obj.name, df)
+    return filtred_info
+
+
+# In[24]:
+
 
 from google.cloud import storage
-
-import os
 
 root_folder = ""
 data_folder = os.path.join(root_folder, "br_stock_exchange/")
@@ -87,7 +157,7 @@ output_file_format = get_storage_file_format()
 stocks_to_filter = get_target_stocks()
 
 
-# In[5]:
+# In[21]:
 
 
 client = storage.Client(project="pipestonks")
