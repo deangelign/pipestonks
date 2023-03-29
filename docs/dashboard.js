@@ -50,7 +50,7 @@ init_doc()
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[3]:
+# In[2]:
 
 
 import panel as pn
@@ -60,8 +60,15 @@ import plotly.graph_objects as go
 pn.extension('plotly', template='fast')
 
 
-# In[4]:
+# In[1]:
 
+
+import os, sys
+parent_dir = os.path.abspath('../..')
+# the parent_dir could already be there if the kernel was not restarted,
+# and we run this cell again
+if parent_dir not in sys.path:
+    sys.path.append(parent_dir)
 
 from pipestonks.connection.firebase_util import (load_dataframe_from_filename, get_temporary_folder, get_storage_file_format)
 
